@@ -40,13 +40,21 @@ is_vm_running = check_vm_running(vm_name)
 
 # Stop the VM before backup if it was running
 if is_vm_running:
+    # Prompt for user confirmation
+    confirmation = input("This script will stop the specified VM. Make sure you have saved any important data. Do you want to proceed? (Y/N): ")
+    if confirmation.upper() != "Y":
+        print("Backup aborted. Exiting the script.")
+        exit()
+    print("Poweroff VM:")
     stop_vm(vm_name)
 
 # Perform the backup
+print("Backup Started:")
 export_vm(vm_name, backup_file_path)
 
 # Start the VM if it was previously running
 if is_vm_running:
+    print("Restarting VM:")
     start_vm(vm_name)
 
 # Remove older backups if retention limit exceeded
@@ -57,3 +65,5 @@ if backups_to_remove > 0:
     for i in range(backups_to_remove):
         backup_to_remove = os.path.join(vm_directory, sorted_backups[i])
         os.remove(backup_to_remove)
+
+print("Backup completed successfully.")
