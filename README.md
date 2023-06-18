@@ -1,62 +1,48 @@
 # VirtualBox VM Backup Script
 
-This script allows you to create scheduled backups of a VirtualBox VM on Windows. It exports the VM to an OVF (Open Virtualization Format) file, providing a convenient way to back up the VM's disk and configuration.
+This script allows you to create scheduled backups of a VirtualBox VM on Windows.
 
 ## Prerequisites
 
-- **VirtualBox**: Ensure that VirtualBox is installed on your Windows system.
-- **Python**: Install Python (version 3 or higher) on your Windows system.
+- Python 3.x installed
+- VirtualBox installed and added to the system's PATH
+- Restic installed and added to the system's PATH
 
 ## Usage
 
-1. Clone or download the script file to your local machine.
+1. Modify the following variables at the top of the script according to your environment:
+   - `vm_name`: Specify the name of your VirtualBox VM.
+   - `base_directory`: Specify the base directory where you want to store the backups.
+   - `restic_repo`: Specify the path to your Restic repository.
+   - `restic_password`: Specify the password for your Restic repository.
 
-2. Open the script file in a text editor.
+2. Open a command prompt or terminal.
 
-3. Locate the `vm_name` variable in the script. Replace `'YOUR_VM_NAME'` with the actual name or UUID of the VirtualBox VM you want to back up.
+3. Navigate to the directory where the script is located.
 
-4. Locate the base_directory variable in the script. Modify the variable to specify the base directory where you want the backups to be stored.
+4. Run the script using the following command:
 
-5. Save the changes to the script file.
-
-6. Open a command prompt and navigate to the directory containing the script.
-
-7. Run the script with the following command:
-
-   ```bash
+   ```shell
    python backup_script.py
    ```
 
-8. The script will perform the following steps:
+   This will initiate the backup process.
 
-   - Check if the specified VM is running. If it is, it will stop the VM.
-   - Export the VM to an OVF file in the specified backup directory.
-   - Start the VM again if it was previously running.
-   - Maintain a retention policy of 5 backups, removing older backups if necessary.
+5. The script will prompt you to confirm if you want to stop the specified VM before the backup. Make sure you have saved any important data. Enter `Y` to proceed or `N` to abort.
 
-9. The backup files will be stored in the backup directory in the following format:
+6. The script will start the backup process and display the progress.
 
-   ```
-   <backup_directory>/<vm_name>/<vm_name>_<timestamp>.ovf
-   ```
+7. Once the backup is completed, Restic will be invoked to create a backup of the backup directory in the specified Restic repository.
 
-## Customization
+8. After the Restic backup is created, the local backup files will be deleted.
 
-- **Backup Directory**: Modify the `base_directory` variable in the script to specify the base directory where the backups will be stored.
+## Notes
 
-- **Retention Policy**: By default, the script retains the latest 5 backups. Modify the `retention_limit` variable in the script to adjust the number of backups to retain.
-
-## Important Note
-
-- The script requires VirtualBox to be installed and accessible via the command-line (`VBoxManage` command). 
-
-- It is recommended to schedule the script to run regularly using a task scheduler (e.g., Windows Task Scheduler) to automate the backup process.
-
-Feel free to modify and adapt the script according to your specific requirements.
+It is recommended to schedule the script to run regularly using a task scheduler (e.g., Windows Task Scheduler) to automate the backup process.
 
 ## License
 
-This script is released under the MIT License. Please see the [LICENSE](LICENSE) file for more details.
+This script is released under the [MIT License](LICENSE).
 
 ## Disclaimer
 

@@ -1,11 +1,13 @@
 import subprocess
 import datetime
 import os
+import shutil
 
-# Specify your VM name and output directory for the backups
+# Specify your VM name, output directory for the backups, and restic repository
 vm_name = 'your_vm_name'
 base_directory = 'C:\\path\\to\\backups\\'
-retention_limit = 5
+restic_repo = 'C:\\path\\to\\restic\\repository'
+restic_password = 'C:\\path\\to\\restic\\.secret'
 
 def check_vm_running(vm_name):
     """Check if the VirtualBox VM is running."""
@@ -24,6 +26,10 @@ def start_vm(vm_name):
 def export_vm(vm_name, output_path):
     """Export the VirtualBox VM to an OVF file."""
     subprocess.run(['VBoxManage', 'export', vm_name, '--output', output_path])
+
+def perform_restic_backup(repo, password, vm_directory):
+    """Perform restic backup of the backup directory."""
+    subprocess.run(['restic', '-r', repo, '-p', password,  'backup', vm_directory])
 
 # Generate a timestamp for the backup file
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -45,25 +51,24 @@ if is_vm_running:
     if confirmation.upper() != "Y":
         print("Backup aborted. Exiting the script.")
         exit()
-    print("Poweroff VM:")
+    print("Power off VM: ", end='', flush=True)
     stop_vm(vm_name)
 
 # Perform the backup
-print("Backup Started:")
+print("Backup Started: ", end='', flush=True)
 export_vm(vm_name, backup_file_path)
 
 # Start the VM if it was previously running
 if is_vm_running:
-    print("Restarting VM:")
+    print("Restarting VM: ", end='', flush=True)
     start_vm(vm_name)
 
-# Remove older backups if retention limit exceeded
-existing_backups = os.listdir(vm_directory)
-backups_to_remove = len(existing_backups) - retention_limit
-if backups_to_remove > 0:
-    sorted_backups = sorted(existing_backups)
-    for i in range(backups_to_remove):
-        backup_to_remove = os.path.join(vm_directory, sorted_backups[i])
-        os.remove(backup_to_remove)
+# Perform restic backup of the backup directory
+print("INFO: Performing restic backup: ")
+perform_restic_backup(restic_repo, restic_password, vm_directory)
+
+# Remove local backup directory
+shutil.rmtree(vm_directory)
+print("INFO: Local backup directory removed")
 
 print("Backup completed successfully.")
