@@ -11,7 +11,6 @@ This script allows you to create scheduled backups of a VirtualBox VM on Windows
 ## Usage
 
 1. Modify the following variables at the top of the script according to your environment:
-   - `vm_name`: Specify the name of your VirtualBox VM.
    - `base_directory`: Specify the base directory where you want to store the backups.
    - `restic_repo`: Specify the path to your Restic repository.
    - `restic_password`: Specify the password for your Restic repository.
@@ -23,10 +22,10 @@ This script allows you to create scheduled backups of a VirtualBox VM on Windows
 4. Run the script using the following command:
 
    ```shell
-   python backup_script.py
+   python backup_script.py --vm [vmname]
    ```
 
-   This will initiate the backup process.
+   This will initiate the backup process. You can either specify the name of the VM to backup using the --vm option, or use --all to backup all VMs.
 
 5. The script will prompt you to confirm if you want to stop the specified VM before the backup. Make sure you have saved any important data. Enter `Y` to proceed or `N` to abort.
 
