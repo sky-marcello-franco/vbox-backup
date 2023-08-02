@@ -1,50 +1,59 @@
 # VirtualBox VM Backup Script
 
-This script allows you to create scheduled backups of a VirtualBox VM on Windows.
+This script is designed to perform backups of VirtualBox VMs and create snapshots using restic for efficient storage. It provides options to backup a specific VM or all VMs on the system.
 
-## Prerequisites
+## Requirements
 
-- Python 3.x installed
-- VirtualBox installed and added to the system's PATH
-- Restic installed and added to the system's PATH
+- VirtualBox
+- restic (https://restic.net/) with an initialized repository for storage
 
 ## Usage
 
-1. Modify the following variables at the top of the script according to your environment:
-   - `base_directory`: Specify the base directory where you want to store the backups.
-   - `restic_repo`: Specify the path to your Restic repository.
-   - `restic_password`: Specify the password for your Restic repository.
+```bash
+python backup_script.py --vm <VM_NAME>
+```
 
-2. Open a command prompt or terminal.
+- Backup a specific VM named `<VM_NAME>`.
 
-3. Navigate to the directory where the script is located.
+```bash
+python backup_script.py --all
+```
 
-4. Run the script using the following command:
+- Backup all VMs on the system.
 
-   ```shell
-   python backup_script.py --vm [vmname]
-   ```
+## Additional Options
 
-   This will initiate the backup process. You can either specify the name of the VM to backup using the --vm option, or use --all to backup all VMs.
+### `--force`
 
-5. The script will prompt you to confirm if you want to stop the specified VM before the backup. Make sure you have saved any important data. Enter `Y` to proceed or `N` to abort.
+```bash
+python backup_script.py --vm <VM_NAME> --force
+```
 
-6. The script will start the backup process and display the progress.
+- Backup a specific VM without prompting to stop the VM, even if it is running.
 
-7. Once the backup is completed, Restic will be invoked to create a backup of the backup directory in the specified Restic repository.
+## Configuration
 
-8. After the Restic backup is created, the local backup files will be deleted.
+Before running the script, make sure to configure the following variables in the script:
 
-## Notes
+```python
+# Specify the output directory for the backups
+base_directory = 'C:\\path\\to\\backups\\'
 
-It is recommended to schedule the script to run regularly using a task scheduler (e.g., Windows Task Scheduler) to automate the backup process.
+# Specify the restic repository path
+restic_repo = 'C:\\path\\to\\restic\\repository'
 
-## License
+# Specify the path to the restic password file
+restic_password = 'C:\\path\\to\\restic\\.secret'
+```
 
-This script is released under the [MIT License](LICENSE).
+## Important Notes
+
+- This script requires VirtualBox and restic to be properly installed and configured on your system.
+- The script will export each VM to an OVF file and perform a restic backup for each VM individually. Snapshots will be created for efficient storage.
+- If the `--force` option is used, the script will stop a running VM without asking for user confirmation.
+- The exported OVF files and backup snapshots will be stored in the specified `base_directory`.
+- Restic snapshots will be created in the specified `restic_repo` for easy management and restoration.
 
 ## Disclaimer
 
-This script is provided as-is without any warranty. Use it at your own risk. Make sure to test the script thoroughly and ensure the integrity of your backups.
-
-Please refer to the original script for the full code and any additional functions or details not covered in this README.md summary.
+This script is provided as-is without any warranties. Use it at your own risk and ensure you have tested it thoroughly in your specific environment before using it in production.
