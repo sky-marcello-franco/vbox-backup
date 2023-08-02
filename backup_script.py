@@ -2,8 +2,9 @@ import subprocess
 import datetime
 import os
 import shutil
+import argparse
 
-# Specify your VM name, output directory for the backups, and restic repository
+# Specify the output directory for the backups and restic repository
 base_directory = 'C:\\path\\to\\backups\\'
 restic_repo = 'C:\\path\\to\\restic\\repository'
 restic_password = 'C:\\path\\to\\restic\\.secret'
@@ -26,11 +27,9 @@ def export_vm(vm_name, output_path):
     """Export the VirtualBox VM to an OVF file."""
     subprocess.run(['VBoxManage', 'export', vm_name, '--output', output_path])
 
-def perform_restic_backup(repo, password, backup_directories):
+def perform_restic_backup(repo, password, vm_directory):
     """Perform restic backup of the backup directories."""
-    restic_args = ['restic', '-r', repo, '-p', password, 'backup']
-    restic_args.extend(backup_directories)
-    subprocess.run(restic_args)
+    subprocess.run(['restic', '-r', repo, '-p', password, 'backup', vm_directory])
 
 # Generate a timestamp for the backup file
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -39,6 +38,7 @@ timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 parser = argparse.ArgumentParser(description='Backup VirtualBox VM')
 parser.add_argument('--vm', help='name of the VM to backup')
 parser.add_argument('--all', action='store_true', help='backup all VMs')
+parser.add_argument('--force', action='store_true', help='Stops the vm without ask in case is running')
 args = parser.parse_args()
 
 # If both --vm and --all options are provided, exit the script
@@ -47,7 +47,7 @@ if args.vm and args.all:
 
 # If neither --vm nor --all option is provided, exit the script
 if not args.vm and not args.all:
-    parser.error("Please specify the name of the VM to backup using the --vm option, or use --all to backup all VMs.")
+    args.all = True
 
 # Get the list of VMs to backup
 if args.all:
@@ -57,10 +57,7 @@ if args.all:
 else:
     vm_list = [args.vm]
 
-# Create a list of backup directories for restic
-backup_directories = []
-
-# Perform the backup for each VM
+# Iterate over the VMs and perform the backup
 for vm_name in vm_list:
     print(f"Backing up VM: {vm_name}")
 
@@ -69,23 +66,23 @@ for vm_name in vm_list:
 
     # Stop the VM before backup if it is running
     if is_vm_running:
-        # Prompt for user confirmation
-        confirmation = input(f"This script will stop the VM '{vm_name}'. Make sure you have saved any important data. Do you want to proceed? (Y/N): ")
-        if confirmation.upper() != "Y":
-            print("Backup aborted. Skipping VM backup.")
-            continue
-
+        if not args.force:
+            # Prompt for user confirmation
+            confirmation = input(f"This script will stop the VM '{vm_name}'. Make sure you have saved any important data. Do you want to proceed? (Y/N): ")
+            if confirmation.upper() != "Y":
+                print("Backup aborted. Skipping VM backup.")
+                continue
         print("Powering off VM...")
         stop_vm(vm_name)
 
     # Create the VM-specific backup directory
-    vm_directory = os.path.join(base_directory, vm_name.replace(" ", "_"))
+    vm_directory = os.path.join(base_directory, vm_name)
     os.makedirs(vm_directory, exist_ok=True)
 
     # Create the backup file path
     backup_file_path = os.path.join(vm_directory, vm_name.replace(" ", "_") + '_' + timestamp + '.ovf')
 
-    # Export the VM
+    # Perform the VM export
     print("Exporting VM...")
     export_vm(vm_name, backup_file_path)
 
@@ -94,15 +91,14 @@ for vm_name in vm_list:
         print("Starting VM...")
         start_vm(vm_name)
 
-    # Add the VM directory to the backup directories list
-    backup_directories.append(vm_directory)
+    # Perform restic backup of the backup directory
+    print("Performing restic backup...")
+    perform_restic_backup(restic_repo, restic_password, vm_directory)
 
-# Perform the restic backup of all backup directories
-print("Performing restic backup...")
-perform_restic_backup(restic_repo, restic_password, backup_directories)
-
-# Remove the VM-specific backup directories
-for vm_directory in backup_directories:
+    # Remove the local backup directory
     shutil.rmtree(vm_directory)
+    print("Local backup directory removed")
 
-print("Backup completed successfully.")
+    print(f"Backup completed for VM: {vm_name}")
+
+print("All VM backups completed.")
